@@ -7,6 +7,7 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "mqtt": "^5.3.4"
+    "mqtt": "^5.3.4",
+    "node-gpsd": "^0.3.4"
   }
 }
