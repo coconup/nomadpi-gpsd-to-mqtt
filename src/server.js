@@ -77,6 +77,11 @@ function connectToGPSD() {
     attemptReconnect();
   });
 
+  gpsListener.on('disconnected', () => {
+    console.error('Disconnected from GPSD');
+    attemptReconnect();
+  });
+
   // Connect to the GPSD service
   gpsListener.connect(() => {
     console.log(`Connected to GPSD at ${GPSD_HOST}`);
