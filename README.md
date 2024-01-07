@@ -12,10 +12,10 @@ This Node.js server connects to a GPSD (GPS Daemon) service, captures TPV (Time,
 
 1. Clone the repository:
 
-   ```bash
-   git clone https://github.com/yourusername/gpsd-mqtt-bridge.git
-   cd gpsd-mqtt-bridge
-  ```
+```bash
+git clone https://github.com/yourusername/gpsd-mqtt-bridge.git
+cd gpsd-mqtt-bridge
+```
 
 2. Install dependencies:
 
