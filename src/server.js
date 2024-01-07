@@ -27,6 +27,22 @@ const gpsListener = new gpsd.Listener({
 // Connect to the MQTT broker
 const mqttClient = mqtt.connect(MQTT_BROKER);
 
+// Connect to the GPSD service
+gpsListener.connect(() => {
+  console.log(`Connected to GPSD at ${GPSD_HOST}`);
+});
+
+// Handle MQTT connection events
+mqttClient.on('connect', () => {
+  console.log(`Connected to MQTT broker at ${MQTT_BROKER}`);
+  gpsListener.watch();
+});
+
+mqttClient.on('error', (error) => {
+  console.error(`MQTT Error: ${error}`);
+  process.exit(1);
+});
+
 // Handle TPV events from GPSD and publish to MQTT
 gpsListener.on('TPV', (tpvData) => {
   const gpsMessage = {
@@ -57,21 +73,6 @@ gpsListener.on('TPV', (tpvData) => {
 gpsListener.on('error', (error) => {
   console.error(`GPSD Error: ${error}`);
   gpsListener.disconnect();
-  process.exit(1);
-});
-
-// Connect to the GPSD service
-gpsListener.connect(() => {
-  console.log(`Connected to GPSD at ${GPSD_HOST}`);
-});
-
-// Handle MQTT connection events
-mqttClient.on('connect', () => {
-  console.log(`Connected to MQTT broker at ${MQTT_BROKER}`);
-});
-
-mqttClient.on('error', (error) => {
-  console.error(`MQTT Error: ${error}`);
   process.exit(1);
 });
 
