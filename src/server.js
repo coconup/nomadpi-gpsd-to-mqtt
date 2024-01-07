@@ -12,68 +12,94 @@ const modes = {
     3: '3d'
 };
 
-// Create a GPSD connection
-const gpsListener = new gpsd.Listener({
-  hostname: GPSD_HOST,
-  port: 2947,
-  parse: true,
-  logger: {
-    info: s => console.log(`GPSD info:`, s),
-    warn: s => console.log(`GPSD warn:`, s),
-    error: s => console.log(`GPSD error:`, s)
-  },
-});
+let gpsListener;
+let mqttClient;
+let reconnectInterval = 3000; // Initial reconnect interval in milliseconds
+const maxReconnectInterval = 60000; // Maximum reconnect interval in milliseconds
 
-// Connect to the MQTT broker
-const mqttClient = mqtt.connect(MQTT_BROKER);
+function connectToMQTT() {
+  // Connect to the MQTT broker
+  mqttClient = mqtt.connect(MQTT_BROKER);
 
-// Connect to the GPSD service
-gpsListener.connect(() => {
-  console.log(`Connected to GPSD at ${GPSD_HOST}`);
-});
+  // Handle MQTT connection events
+  mqttClient.on('connect', () => {
+    console.log(`Connected to MQTT broker at ${MQTT_BROKER}`);
+  });
 
-// Handle MQTT connection events
-mqttClient.on('connect', () => {
-  console.log(`Connected to MQTT broker at ${MQTT_BROKER}`);
-  gpsListener.watch();
-});
+  mqttClient.on('error', (error) => {
+    console.error(`MQTT Error: ${error}`);
+    process.exit(1);
+  });
+};
 
-mqttClient.on('error', (error) => {
-  console.error(`MQTT Error: ${error}`);
-  process.exit(1);
-});
+function connectToGPSD() {
+  // Create a GPSD connection
+  gpsListener = new gpsd.Listener({
+    hostname: GPSD_HOST,
+    port: 2947,
+    parse: true,
+    logger: {
+      info: s => console.log(`GPSD info:`, s),
+      warn: s => console.log(`GPSD warn:`, s),
+      error: s => console.log(`GPSD error:`, s)
+    },
+  });
 
-// Handle TPV events from GPSD and publish to MQTT
-gpsListener.on('TPV', (tpvData) => {
-  const gpsMessage = {
-    mode: modes[tpvData.mode],
-    time: tpvData.time,
-    longitude: tpvData.lon,
-    latitude: tpvData.lat,
-    altitude_hae: tpvData.altHAE,
-    altitude_msl: tpvData.altMSL,
-    speed: tpvData.speed,
-    direction: tpvData.track,
-    climb: tpvData.climb,
-    estimated_errors: {
-      longitude: tpvData.epx,
-      latitude: tpvData.epy,
-      altitude: tpvData.epv,
-      speed: tpvData.eps,
-      direction: tpvData.epd,
-      climb: tpvData.epc
+  // Handle TPV events from GPSD and publish to MQTT
+  gpsListener.on('TPV', (tpvData) => {
+    const gpsMessage = {
+      mode: modes[tpvData.mode],
+      time: tpvData.time,
+      longitude: tpvData.lon,
+      latitude: tpvData.lat,
+      altitude_hae: tpvData.altHAE,
+      altitude_msl: tpvData.altMSL,
+      speed: tpvData.speed,
+      direction: tpvData.track,
+      climb: tpvData.climb,
+      estimated_errors: {
+        longitude: tpvData.epx,
+        latitude: tpvData.epy,
+        altitude: tpvData.epv,
+        speed: tpvData.eps,
+        direction: tpvData.epd,
+        climb: tpvData.epc
+      }
+    };
+
+    mqttClient.publish(MQTT_TOPIC, JSON.stringify(gpsMessage));
+  });
+
+  // Handle GPSD socket error
+  gpsListener.on('error', (error) => {
+    console.error(`GPSD Error: ${error}`);
+    gpsListener.disconnect();
+    attemptReconnect();
+  });
+
+  // Connect to the GPSD service
+  gpsListener.connect(() => {
+    console.log(`Connected to GPSD at ${GPSD_HOST}`);
+    reconnectInterval = 3000; // Reset reconnect interval on successful connection
+    gpsListener.watch();
+  });
+};
+
+function attemptReconnect() {
+  console.log(`Attempting to reconnect to GPSD in ${reconnectInterval / 1000} seconds...`);
+  
+  setTimeout(() => {
+    if (reconnectInterval < maxReconnectInterval) {
+      reconnectInterval *= 2; // Double the reconnect interval
     }
-  };
 
-  mqttClient.publish(MQTT_TOPIC, JSON.stringify(gpsMessage));
-});
+    connectToGPSD();
+  }, reconnectInterval);
+}
 
-// Handle GPSD socket error
-gpsListener.on('error', (error) => {
-  console.error(`GPSD Error: ${error}`);
-  gpsListener.disconnect();
-  process.exit(1);
-});
+// Initial connections
+connectToMQTT();
+connectToGPSD();
 
 // Handle process termination
 process.on('SIGINT', () => {
