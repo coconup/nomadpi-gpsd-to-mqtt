@@ -44,6 +44,7 @@ gpsListener.on('TPV', (tpvData) => {
     }
   };
 
+  console.log('tpv', JSON.stringify(gpsMessage))
   mqttClient.publish(MQTT_TOPIC, JSON.stringify(gpsMessage));
 });
 
