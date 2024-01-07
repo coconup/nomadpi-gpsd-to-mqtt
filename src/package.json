@@ -1,0 +1,12 @@
+{
+  "name": "vanpi-mqtt-hub",
+  "version": "1.0.0",
+  "description": "VanPi MQTT Hub",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "mqtt": "^5.3.4"
+  }
+}
