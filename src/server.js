@@ -17,6 +17,11 @@ const gpsListener = new gpsd.Listener({
   hostname: GPSD_HOST,
   port: 2947,
   parse: true,
+  logger: {
+    info: s => console.log(`GPSD info:`, s),
+    warn: s => console.log(`GPSD warn:`, s),
+    error: s => console.log(`GPSD error:`, s)r
+  },
 });
 
 // Connect to the MQTT broker
