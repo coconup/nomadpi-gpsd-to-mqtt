@@ -20,7 +20,7 @@ const gpsListener = new gpsd.Listener({
   logger: {
     info: s => console.log(`GPSD info:`, s),
     warn: s => console.log(`GPSD warn:`, s),
-    error: s => console.log(`GPSD error:`, s)r
+    error: s => console.log(`GPSD error:`, s)
   },
 });
 
