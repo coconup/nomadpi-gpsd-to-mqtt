@@ -1,7 +1,7 @@
 {
-  "name": "vanpi-mqtt-hub",
+  "name": "nomadpi-mqtt-hub",
   "version": "1.0.0",
-  "description": "VanPi MQTT Hub",
+  "description": "nomadPi MQTT Hub",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

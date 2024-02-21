@@ -1,4 +1,4 @@
-# VanPi GPSD to MQTT Bridge
+# nomadPi GPSD to MQTT Bridge
 
 This Node.js server connects to a GPSD (GPS Daemon) service, captures TPV (Time, Position, Velocity) events, and publishes them to an MQTT topic.
 
